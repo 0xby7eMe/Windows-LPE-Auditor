@@ -58,6 +58,24 @@ std::string SeverityLabel(Severity s) {
         default:                 return "INFO";
     }
 }
+    
+Element RenderAnimatedHeader(int tick) {
+    std::string title = "WinLpeAuditor";
+    Elements letters;
+
+    for (size_t i = 0; i < title.length(); ++i) {
+        double wave = std::sin(tick * 0.15 + i * 0.4); 
+        
+        int brightness = static_cast<int>(140 + (wave * 90)); 
+        brightness = std::clamp(brightness, 80, 255);
+
+        Color shimmerColor = Color::RGB(brightness, brightness, brightness);
+        
+        letters.push_back(text(std::string(1, title[i])) | bold | color(shimmerColor));
+    }
+
+    return hbox(std::move(letters));
+}
 
 Element Badge(const std::string& label, Color fg, Color bg) {
     return text(" " + label + " ") | bold | color(fg) | bgcolor(bg);
@@ -95,6 +113,8 @@ Element ProgressBar(double fraction, int width) {
 }  // namespace
 
 void TuiApp::Run() {
+    std::cout << "\033]0;WinLpeAuditor - Windows Local Privilege Escalation Auditor\007" << std::flush;
+    
     const auto& checks = engine_.Checks();
     const size_t count = checks.size();
 
@@ -106,20 +126,24 @@ void TuiApp::Run() {
     std::string statusText = "Ready.";
     std::mutex stateMutex;
 
+    std::atomic<int> animationTick{0};
+    std::atomic<bool> appActive{true};
+
     auto screen = ScreenInteractive::Fullscreen();
+    
+    std::thread animationThread([&] {
+        while (appActive.load()) {
+            animationTick++;
+            screen.PostEvent(Event::Custom);
+            std::this_thread::sleep_for(std::chrono::milliseconds(30)); // ~30ms für geschmeidige Übergänge
+        }
+    });
 
     auto runAudit = [&] {
         bool expected = false;
         if (!running.compare_exchange_strong(expected, true)) return;
 
         std::thread([&] {
-            std::thread spinner([&] {
-                while (running.load()) {
-                    screen.PostEvent(Event::Custom);
-                    std::this_thread::sleep_for(std::chrono::milliseconds(90));
-                }
-            });
-
             std::vector<size_t> indices(count);
             for (size_t i = 0; i < count; ++i) indices[i] = i;
 
@@ -131,20 +155,16 @@ void TuiApp::Run() {
 
             {
                 std::lock_guard<std::mutex> lock(stateMutex);
-                size_t totalFindings = 0, failedChecks = 0;
+                size_t totalFindings = 0;
                 for (size_t i = 0; i < count; ++i) {
                     results[i] = finalResults[i];
                     hasRun[i] = true;
                     totalFindings += results[i].findings.size();
-                    if (!results[i].ranSuccessfully) ++failedChecks;
                 }
-                statusText = std::to_string(totalFindings) + " finding(s) across " +
-                             std::to_string(count) + " check(s)";
-                if (failedChecks) statusText += ", " + std::to_string(failedChecks) + " failed";
+                statusText = std::to_string(totalFindings) + " finding(s) found across all checks.";
                 progress = 1.0;
             }
             running = false;
-            spinner.join();
             screen.PostEvent(Event::Custom);
         }).detach();
     };
@@ -259,8 +279,10 @@ void TuiApp::Run() {
 
         auto header = hbox({
             vbox({
-                text("WinLpeAuditor") | bold | color(Fg()),
+                RenderAnimatedHeader(animationTick.load()),
                 text("Windows LPE misconfiguration audit") | color(FaintFg()),
+                filler(),
+                text("v0.1.0") | color(FaintFg())
             }),
             filler(),
             Badge(std::to_string(count) + " CHECKS", MutedFg(), MutedBg()),
@@ -320,6 +342,11 @@ void TuiApp::Run() {
     });
 
     screen.Loop(rootComponent);
+    
+    appActive = false;
+    if (animationThread.joinable()) {
+        animationThread.join();
+    }
 }
 
 }
