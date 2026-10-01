@@ -10,6 +10,8 @@ Checks included:
 - **Token Privilege:** Flags highly dangerous Windows privileges (e.g., `SeImpersonatePrivilege`, `SeDebugPrivilege`) assigned to the current process token that open direct paths to local privilege escalation.
 - **Modifiable Service Binaries:** Scans all registered Windows services and parses file ACLs to ensure low-privileged user groups (like `Everyone` or `Authenticated Users`) do not possess write permissions over the service executables.
 - **Point and Print Policy:** Audits `HKLM` printer policies to ensure that the installation of remote printer drivers is restricted to administrators and that elevation warnings have not been dangerously disabled.
+- **Logon Autostart (Registry Run Keys):** Checks global HKLM Run and RunOnce keys for write permissions granted to standard user groups.
+- **Logon Autostart (Startup Folder):** Audits the file permissions of the system-wide startup directory to prevent unprivileged shortcut planting.
 
 ## Requirements
 

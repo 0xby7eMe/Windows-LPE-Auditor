@@ -66,12 +66,19 @@ Element RenderAnimatedHeader(int tick) {
     for (size_t i = 0; i < title.length(); ++i) {
         double wave = std::sin(tick * 0.15 + i * 0.4); 
         
-        int brightness = static_cast<int>(140 + (wave * 90)); 
-        brightness = std::clamp(brightness, 80, 255);
+        double intensity = 0.67 + (wave * 0.33);
 
-        Color shimmerColor = Color::RGB(brightness, brightness, brightness);
+        int r = static_cast<int>(129 * intensity);
+        int g = static_cast<int>(140 * intensity);
+        int b = static_cast<int>(248 * intensity);
+
+        r = std::clamp(r, 40, 255);
+        g = std::clamp(g, 40, 255);
+        b = std::clamp(b, 80, 255);
+
+        Color accentShimmer = Color::RGB(r, g, b);
         
-        letters.push_back(text(std::string(1, title[i])) | bold | color(shimmerColor));
+        letters.push_back(text(std::string(1, title[i])) | bold | color(accentShimmer));
     }
 
     return hbox(std::move(letters));
@@ -135,7 +142,7 @@ void TuiApp::Run() {
         while (appActive.load()) {
             animationTick++;
             screen.PostEvent(Event::Custom);
-            std::this_thread::sleep_for(std::chrono::milliseconds(30)); // ~30ms für geschmeidige Übergänge
+            std::this_thread::sleep_for(std::chrono::milliseconds(60)); // ~30ms für geschmeidige Übergänge
         }
     });
 
