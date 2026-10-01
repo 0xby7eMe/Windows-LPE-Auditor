@@ -2,6 +2,8 @@
 
 A small Windows local-privilege-escalation (LPE) misconfiguration auditor with a terminal UI, built with C++20 and [FTXUI](https://github.com/ArthurSonzogni/FTXUI).
 
+![Screenshot](./git-assets/screenshot.png)
+
 Checks included:
 - **Unquoted Service Paths** — Win32 services with an unquoted binary path containing spaces, exploitable if a user can write earlier in that path.
 - **AlwaysInstallElevated Policy** — flags when both `HKCU` and `HKLM` allow any user to install `.msi` packages with SYSTEM rights.
