@@ -21,6 +21,7 @@ add_executable(WinLpeAuditor
     src/Checks/RegistryUtils.cpp
     src/Checks/UnquotedServicePathCheck.cpp
     src/Checks/AlwaysInstallElevatedCheck.cpp
+    src/Checks/TokenPrivilegeCheck.cpp
     src/UI/TuiApp.cpp
 )
 
