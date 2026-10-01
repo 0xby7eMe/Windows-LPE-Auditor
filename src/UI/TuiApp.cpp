@@ -1,16 +1,17 @@
 ﻿#include "UI/TuiApp.h"
 
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/event.hpp>
-#include <ftxui/component/screen_interactive.hpp>
-#include <ftxui/dom/elements.hpp>
-
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/event.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
+
+#include "Version.h"
 
 using namespace ftxui;
 
@@ -118,6 +119,8 @@ Element ProgressBar(double fraction, int width) {
 }
 
 }  // namespace
+    
+enum class View { Checks, About };
 
 void TuiApp::Run() {
     std::cout << "\033]0;WinLpeAuditor - Windows Local Privilege Escalation Auditor\007" << std::flush;
@@ -132,6 +135,8 @@ void TuiApp::Run() {
     double progress = 0.0;
     std::string statusText = "Ready.";
     std::mutex stateMutex;
+    
+    View currentView = View::Checks;
 
     std::atomic<int> animationTick{0};
     std::atomic<bool> appActive{true};
@@ -204,6 +209,76 @@ void TuiApp::Run() {
             vbox(std::move(rows)),
             filler(),
         })) | size(WIDTH, EQUAL, 36);
+    };
+    
+    auto renderTabs = [&]() -> Element {
+        auto tab = [&](const std::string& label, View v) {
+            bool active = currentView == v;
+            Element inner = hbox({text(label)}) | bold;
+            if (active) {
+                return inner | color(Color::RGB(9, 9, 11)) | bgcolor(Accent());
+            }
+            return inner | color(FaintFg());
+        };
+
+        return hbox({
+                   text(" "),
+                   tab("Checks", View::Checks),
+                   text("    "),
+                   tab("About", View::About),
+                   text(" "),
+               }) |
+               borderStyled(ROUNDED) | color(Border()) | bgcolor(CardBg());
+    };
+
+    auto renderAbout = [&]() -> Element {
+        Elements content;
+
+        content.push_back(text(""));
+        content.push_back(hcenter(RenderAnimatedHeader(animationTick.load())));
+        content.push_back(hcenter(text("Windows LPE misconfiguration audit") | color(FaintFg())));
+        content.push_back(text(""));
+        content.push_back(hcenter(Badge(std::string("v") + WinLpeAuditor::kVersion, Accent(), MutedBg())));
+        content.push_back(text(""));
+        content.push_back(paragraphAlignCenter(
+            "A modular Windows local-privilege-escalation misconfiguration auditor. "
+            "Scans for common LPE vectors such as unquoted service paths and "
+            "AlwaysInstallElevated.") | color(MutedFg()));
+        content.push_back(text(""));
+        content.push_back(separator() | color(Border()));
+        content.push_back(text(""));
+
+        auto infoRow = [&](const std::string& label, Element value) {
+            return hbox({
+                text(label) | color(FaintFg()) | size(WIDTH, EQUAL, 16),
+                value,
+            });
+        };
+
+        content.push_back(hcenter(vbox({
+            infoRow("Created by", text(WinLpeAuditor::kAuthor) | color(Fg()) | bold),
+            text(""),
+            infoRow("GitHub", text(WinLpeAuditor::kGithubUrl) | color(InfoFg()) | underlined),
+            text(""),
+            infoRow("Checks loaded", text(std::to_string(count)) | color(Fg())),
+            text(""),
+            infoRow("Built with", text("FTXUI, CMake, MSVC") | color(Fg())),
+        })));
+
+        content.push_back(text(""));
+        content.push_back(separator() | color(Border()));
+        content.push_back(text(""));
+        content.push_back(hcenter(text("KEYBINDINGS") | bold | color(FaintFg())));
+        content.push_back(text(""));
+        content.push_back(hcenter(hbox({
+            Kbd("tab"), text("  switch view    ") | color(FaintFg()),
+            Kbd("r"),   text("  run checks    ") | color(FaintFg()),
+            Kbd("↑/↓"), text("  navigate    ") | color(FaintFg()),
+            Kbd("q"),   text("  quit") | color(FaintFg()),
+        })));
+        content.push_back(filler());
+
+        return Card(vbox(std::move(content)) | flex) | flex;
     };
 
     auto renderDetails = [&]() -> Element {
@@ -289,13 +364,15 @@ void TuiApp::Run() {
                 RenderAnimatedHeader(animationTick.load()),
                 text("Windows LPE misconfiguration audit") | color(FaintFg()),
                 filler(),
-                text("v0.1.0") | color(FaintFg())
+                text(std::string("v") + WinLpeAuditor::kVersion) | color(FaintFg())
             }),
             filler(),
             Badge(std::to_string(count) + " CHECKS", MutedFg(), MutedBg()),
         });
 
-        auto body = hbox({renderSidebar(), text(" "), renderDetails()}) | flex;
+        auto body = currentView == View::Checks
+            ? hbox({renderSidebar(), text(" "), renderDetails()}) | flex
+            : hbox({renderAbout()}) | flex;
 
         Element footerStatus = text(currentStatus) | color(MutedFg()) | flex;
         Element footerRight = text("");
@@ -308,14 +385,22 @@ void TuiApp::Run() {
         }
         auto footer = hbox({footerStatus, footerRight});
 
-        auto hints = hbox({
-            Kbd("r"), text(" run   ") | color(FaintFg()),
-            Kbd("↑/↓"), text(" navigate   ") | color(FaintFg()),
-            Kbd("q"), text(" quit") | color(FaintFg()),
-        });
+        auto hints = currentView == View::Checks
+            ? hbox({
+                  Kbd("r"), text(" run   ") | color(FaintFg()),
+                  Kbd("↑/↓"), text(" navigate   ") | color(FaintFg()),
+                  Kbd("tab"), text(" about   ") | color(FaintFg()),
+                  Kbd("q"), text(" quit") | color(FaintFg()),
+              })
+            : hbox({
+                  Kbd("tab"), text(" back   ") | color(FaintFg()),
+                  Kbd("q"), text(" quit") | color(FaintFg()),
+              });
 
         return vbox({
                    header,
+                   text(""),
+                   renderTabs(),
                    text(""),
                    renderSummary(),
                    text(""),
@@ -329,12 +414,19 @@ void TuiApp::Run() {
     });
 
     rootComponent |= CatchEvent([&](Event event) {
-        if (event == Event::Character('r') || event == Event::Character('R')) {
-            runAudit();
+        if (event == Event::Tab) {
+            currentView = (currentView == View::Checks) ? View::About : View::Checks;
             return true;
         }
         if (event == Event::Character('q') || event == Event::Character('Q') || event == Event::Escape) {
             screen.ExitLoopClosure()();
+            return true;
+        }
+        if (currentView != View::Checks) {
+            return false;
+        }
+        if (event == Event::Character('r') || event == Event::Character('R')) {
+            runAudit();
             return true;
         }
         if (event == Event::ArrowUp || event == Event::Character('k')) {
