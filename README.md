@@ -12,6 +12,7 @@ Checks included:
 - **Point and Print Policy:** Audits `HKLM` printer policies to ensure that the installation of remote printer drivers is restricted to administrators and that elevation warnings have not been dangerously disabled.
 - **Logon Autostart (Registry Run Keys):** Checks global HKLM Run and RunOnce keys for write permissions granted to standard user groups.
 - **Logon Autostart (Startup Folder):** Audits the file permissions of the system-wide startup directory to prevent unprivileged shortcut planting.
+- **WSL Root Default User Configuration:** Inspects user-specific registry entries for Windows Subsystem for Linux (WSL) to detect distributions that automatically log in as the `root` user (UID 0).
 
 ## Requirements
 

@@ -5,6 +5,7 @@
 #include "Checks/StartupFolderCheck.h"
 #include "Checks/PointAndPrintCheck.h"
 #include "Checks/ModifiableServiceBinariesCheck.h"
+#include "Checks/WslDefaultUserCheck.h"
 #include "Core/AuditEngine.h"
 #include "UI/TuiApp.h"
 
@@ -22,6 +23,7 @@ int main() {
     engine.Register(std::make_unique<Checks::PointAndPrintCheck>());
     engine.Register(std::make_unique<Checks::RegistryRunKeysCheck>());
     engine.Register(std::make_unique<Checks::StartupFolderCheck>());
+    engine.Register(std::make_unique<Checks::WslDefaultUserCheck>());
 
     UI::TuiApp app(engine);
     app.Run();
