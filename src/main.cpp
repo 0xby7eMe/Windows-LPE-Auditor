@@ -1,6 +1,7 @@
 #include "Checks/AlwaysInstallElevatedCheck.h"
 #include "Checks/UnquotedServicePathCheck.h"
 #include "Checks/TokenPrivilegeCheck.h"
+#include "Checks/PointAndPrintCheck.h"
 #include "Checks/ModifiableServiceBinariesCheck.h"
 #include "Core/AuditEngine.h"
 #include "UI/TuiApp.h"
@@ -16,6 +17,7 @@ int main() {
     engine.Register(std::make_unique<Checks::AlwaysInstallElevatedCheck>());
     engine.Register(std::make_unique<Checks::TokenPrivilegeCheck>());
     engine.Register(std::make_unique<Checks::ModifiableServiceBinariesCheck>());
+    engine.Register(std::make_unique<Checks::PointAndPrintCheck>());
 
     UI::TuiApp app(engine);
     app.Run();
