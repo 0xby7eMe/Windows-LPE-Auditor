@@ -1,0 +1,26 @@
+﻿# Build output
+cmake-build-*/
+build/
+out/
+bin/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+Testing/
+
+.idea/
+*.iml
+
+# Windows
+Thumbs.db
+desktop.ini
