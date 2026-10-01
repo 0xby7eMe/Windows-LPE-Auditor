@@ -5,8 +5,10 @@ A small Windows local-privilege-escalation (LPE) misconfiguration auditor with a
 ![Screenshot](./git-assets/screenshot.png)
 
 Checks included:
-- **Unquoted Service Paths** — Win32 services with an unquoted binary path containing spaces, exploitable if a user can write earlier in that path.
-- **AlwaysInstallElevated Policy** — flags when both `HKCU` and `HKLM` allow any user to install `.msi` packages with SYSTEM rights.
+- **Unquoted Service Paths** - Win32 services with an unquoted binary path containing spaces, exploitable if a user can write earlier in that path.
+- **AlwaysInstallElevated Policy** - flags when both `HKCU` and `HKLM` allow any user to install `.msi` packages with SYSTEM rights.
+- **Token Privilege:** Flags highly dangerous Windows privileges (e.g., `SeImpersonatePrivilege`, `SeDebugPrivilege`) assigned to the current process token that open direct paths to local privilege escalation.
+- **Modifiable Service Binaries:** Scans all registered Windows services and parses file ACLs to ensure low-privileged user groups (like `Everyone` or `Authenticated Users`) do not possess write permissions over the service executables.
 
 ## Requirements
 

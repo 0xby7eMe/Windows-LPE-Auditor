@@ -12,7 +12,7 @@ namespace WinLpeAuditor
             result.checkName = Name();
 
             const std::wstring regPath = L"Software\\Policies\\Microsoft\\Windows\\Installer";
-            const bool hkcuSet = Util::RegistryDwordEquals1(HKEY_CURRENT_USER, regPath, L"AlwaysInstallElevated");
+            const bool hkcuSet = Util::RegistryDwordEquals1(HKEY_CURRENT_USER, regPath, L"AlwaysInstallElevated");          
             const bool hklmSet = Util::RegistryDwordEquals1(HKEY_LOCAL_MACHINE, regPath, L"AlwaysInstallElevated");
 
             if (hkcuSet && hklmSet) {
