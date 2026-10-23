@@ -50,3 +50,7 @@ No other code needs to change.
 ## Disclaimer
 
 For use only in environments and systems you are authorized to assess.
+
+## TODO
+- [] Implement more privesc Checks
+- [] Releases pipeline
