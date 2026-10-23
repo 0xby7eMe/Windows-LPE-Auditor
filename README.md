@@ -52,5 +52,5 @@ No other code needs to change.
 For use only in environments and systems you are authorized to assess.
 
 ## TODO
-- [] Implement more privesc Checks
-- [] Releases pipeline
+- [ ] Implement more privesc Checks
+- [ ] Releases pipeline
